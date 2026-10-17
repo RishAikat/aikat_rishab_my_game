@@ -8,6 +8,12 @@ Input - keys, buttons, voice, mouse, touch, breath, movement, control stick
 Process - input processed (direction of control, magnitude)
 Output - Draw new frames pixels, sound, haptic (senses)
 (Store)
+change test
+
+GOALS: Collect dragon eggs
+RULES: Complete goals in timer
+FEEDBACK: Sounds, Images, Changes in screen
+FREEDOM: Can move as desired within map, can choose strategy
 '''
 
 #Importing required modules
@@ -29,26 +35,52 @@ class Game:
         self.clock = pg.time.Clock()
         self.running = True
         self.playing = True
+        self.score = 0
+        self.highscore = 0
 
     #Loading files
     def load_data(self, map):
         self.game_dir = path.dirname(__file__)
+        self.game_save_dir = path.join(self.game_dir,"highscore.txt")
         self.img_dir = path.join(self.game_dir, 'images')
         self.snd_dir = path.join(self.game_dir, 'sound')
         self.map = Map(path.join(self.game_dir, map))
+        # Creates file if does not exist
+        try:
+            with open(self.game_save_dir, "x", encoding="utf-8") as file:
+                file.write("Hello World!")
+            print("File created successfully.")
+        except FileExistsError:
+            print("File already exists. No action taken.")
+
+        # Open file to try set highscore with except set to 0
+        with open(self.game_save_dir, 'r') as f:
+            try:
+                self.highscore = int(f.read())
+                print("Highscore Set")
+            except:
+                self.highscore = 0
+                print("Highscore 0")
 
 
     def new(self):
         self.load_data('level1.txt')
         self.all_sprites = pg.sprite.Group()
         self.all_walls = pg.sprite.Group()
-        # Instantiate Player Here  
+        self.all_mobs = pg.sprite.Group()
+        self.all_coins = pg.sprite.Group()
+        # Instantiate Player Here 
+        # Instantiates  all sprite classes
         for row, tiles in enumerate(self.map.data):
             for col, tile in enumerate(tiles):
                 if tile == '1':
                     Wall(self, col, row)
+                if tile == 'M':
+                    Mob(self, col, row)
                 if tile == 'P':
                     self.player = Player(self, col, row)
+                if tile == 'C':
+                    Coin(self, col, row)
 
     def run(self):
         while self.running:
@@ -60,6 +92,8 @@ class Game:
     def events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                with open(path.join(self.game_dir, self.game_save_dir), 'w') as f:
+                    f.write(str(self.score))
                 if self.playing:
                     self.playing = False
                 self.running = False
@@ -68,10 +102,20 @@ class Game:
     def update(self):
         self.all_sprites.update()
 
+    def draw_text(self, text, size, color, x, y):
+        font_name = pg.font.match_font('arial')
+        font = pg.font.Font(font_name, size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.midtop = (x,y)
+        self.screen.blit(text_surface, text_rect)
+
     #Draws game components
     def draw(self):
         self.screen.fill(BLUE)
         self.all_sprites.draw(self.screen)
+        self.draw_text("Frames per second: " + str(floor(1/self.dt)), 24, WHITE, WIDTH/2, HEIGHT/4)
+        self.draw_text(f"Coins:{self.player.coins} ", 24, YELLOW, WIDTH/2, HEIGHT/9)
         pg.display.flip()
 
 #Starts Game

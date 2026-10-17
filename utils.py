@@ -11,13 +11,13 @@ class Map:
             for line in f:
                 self.data.append(line.strip())
 
-        self.tilewidth = len(self.data[0])
-        self.tileheight = len(self.data)
-        self.width = self.tilewidth * TILESIZE
-        self.height = self.tileheight * TILESIZE
+        # self.tilewidth = len(self.data[0])
+        # self.tileheight = len(self.data)
+        # self.width = self.tilewidth * TILESIZE
+        # self.height = self.tileheight * TILESIZE
         print('map instantiated')
 
-#Creates And Updates Character
+# Creates And Updates Character
 class Spritesheet:
     def __init__(self, filename):
         self.spritesheet = pg.image.load(filename).convert()
@@ -25,6 +25,7 @@ class Spritesheet:
     def get_image(self, x, y, width, height):
         image = pg.Surface((width, height))
         image.blit(self.spritesheet, (0,0), (x, y, width, height))
+        # New variable to rotate/translate/scale
         new_image = pg.transform.scale(image, (width, height))
         image = new_image
         return image

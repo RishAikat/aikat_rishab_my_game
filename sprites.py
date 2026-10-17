@@ -8,10 +8,11 @@ vec = pg.math.Vector2
 
 
 
-#Creates Rules For Collisions
+# Creates Rules For Collisions
 def collide_hit_rect(one, two):
     return one.hit_rect.colliderect(two.rect)
 
+# Sets position off of collision
 def collide_with_walls(sprite, group, dir):
     hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
     if dir == "x":
@@ -38,26 +39,28 @@ class Player(Sprite):
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
+        # This provides us with raster images for use in animation or otherwise
         self.spritesheet = Spritesheet(path.join(self.game.img_dir, "sprite_sheet.png"))
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image = self.spritesheet.get_image(0,0,TILESIZE,TILESIZE)
-        #self.image.fill(WHITE)
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.image.set_colorkey(BLUE)
+        self.rect = self.image.get_rect()   
         self.vel = vec(0,0)
         self.pos = vec(x,y) * TILESIZE
         self.hit_rect = PLAYER_HIT_RECT
+        # Start with current frames and last update at zero so we can cycle through animations
         self.current_frame = 0
         self.last_update = 0
+        # Accounting for the states of the player.
         self.jumping = False
         self.moving = False
+        self.coins = 0
         print("player instance created")
+        self.load_images()
 
     # Gets player input
     def get_keys(self):
         self.vel = vec(0,0)
-        # self.vx, self.vy = 0,0
         keys = pg.key.get_pressed()
         if keys[pg.K_a]:
             #self.vx = -PLAYER_SPEED
@@ -76,13 +79,15 @@ class Player(Sprite):
 
     def jump(self):
         pass
+    def load_images(self):
+        self.idle_frames = [self.spritesheet.get_image(0,0, TILESIZE, TILESIZE), self.spritesheet.get_image(32,0, TILESIZE, TILESIZE), self.spritesheet.get_image(0,32, TILESIZE, TILESIZE), self.spritesheet.get_image(32,32, TILESIZE, TILESIZE)]
     # Cycles through Character Animations
     def animate(self):
-        now = pg.Time.get_ticks()
+        now = pg.time.get_ticks()
         if not self.jumping and not self.moving:
             if now - self.last_update > 350:
                 self.last_update = now
-                self.current_frame = (self.current_frame + 1) % len(self.standing_frames)
+                self.current_frame = (self.current_frame + 1) % len(self.idle_frames)
                 bottom = self.rect.bottom
                 self.image = self.idle_frames[self.current_frame]
                 self.rect = self.image.get_rect()
@@ -95,11 +100,93 @@ class Player(Sprite):
                 self.image = self.moving_frames[self.current_frame]
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
+
+    #Checks for coin collection
+    # def check_coins(self):
+    #     hits = pg.sprite.spritecollide(self, self.coins, True)
+    #     self.game.score += len(hits)
+
     #Rules for Character Movement
     def update(self):
+        #self.check_coins()
+        self.animate()
         self.get_keys()
         self.rect.center = self.pos
         self.pos += self.vel * self.game.dt
+        hits = pg.sprite.spritecollide(self, self.game.all_coins, True)
+        if hits:
+            self.coins += 1
+            self.game.score += 1
+            # print(f"I have {self.coins} coins")
+        self.hit_rect.centerx = self.pos.x
+        collide_with_walls(self, self.game.all_walls, 'x')
+        self.hit_rect.centery = self.pos.y
+        collide_with_walls(self, self.game.all_walls, 'y')
+        self.rect.center = self.hit_rect.center
+
+# Copied over and modifed code for class Player
+class Mob(Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        # This provides us with raster images for use in animation or otherwise
+        self.spritesheet = Spritesheet(path.join(self.game.img_dir, "sprite_sheet.png"))
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image = self.spritesheet.get_image(0,0,TILESIZE,TILESIZE)
+        self.image.set_colorkey(RED)
+        #self.image.fill(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.speed = 100
+        self.vel = vec(0,0)
+        self.pos = vec(x,y) * TILESIZE
+        self.hit_rect = MOB_HIT_RECT
+        # Start with current frames and last update at zero so we can cycle through animations
+        self.current_frame = 0
+        self.last_update = 0
+        # Accounting for the states of the mob.
+        self.jumping = False
+        self.moving = False
+        print("mob instance created")
+        self.load_images()
+
+    def load_images(self):
+            self.idle_frames = [self.spritesheet.get_image(64,32, TILESIZE, TILESIZE), self.spritesheet.get_image(96,0, TILESIZE, TILESIZE), self.spritesheet.get_image(64,32, TILESIZE, TILESIZE), self.spritesheet.get_image(96,32, TILESIZE, TILESIZE)]
+    # Cycles through Mob Animations
+    def animate(self):
+        now = pg.time.get_ticks()
+        if not self.jumping and not self.moving:
+            # Decides when to switch to next frame
+            if now - self.last_update > 350:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.idle_frames)
+                bottom = self.rect.bottom
+                self.image = self.idle_frames[self.current_frame]
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+        elif self.moving:
+            if now - self.last_update > 350:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.idle_frames)
+                bottom = self.rect.bottom
+                self.image = self.moving_frames[self.current_frame]
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+
+    #Rules for Character Movement
+    def follow(self,obj):
+        # Make the mob follow the player, which is the objective
+        direction = vec(obj.rect.centerx - self.rect.centerx, obj.rect.centery - self.rect.centery)
+        if direction.length() > 0:
+            direction = direction.normalize()
+        self.vel = direction
+    
+    def update(self):
+        self.animate()
+        self.follow(self.game.player)
+        self.pos += self.vel * self.speed * self.game.dt
         self.hit_rect.centerx = self.pos.x
         collide_with_walls(self, self.game.all_walls, 'x')
         self.hit_rect.centery = self.pos.y
@@ -115,11 +202,23 @@ class Wall(Sprite):
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.vx, self.vy = 0, 0
-        self.x = x * TILESIZE
-        self.y = y * TILESIZE
-        self.rect.x = self.x
-        self.rect.y = self.y
+        self.vel = vec(0,0)
+        self.pos = vec(x,y) * TILESIZE
+        self.rect.center = self.pos
         print("Wall Instance Created")
+
+# Copied Wall Class to Make Coin Class with Sprite as Super Class
+class Coin(Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.all_coins
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        pg.draw.circle(self.image, GOLD, (TILESIZE/2,TILESIZE/2), TILESIZE/2)
+        self.image.set_colorkey(BLACK)
+        #self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.vel = vec(0,0)
+        self.pos = vec(x,y) * TILESIZE
+        self.rect.center = self.pos
+        print("Coin Instance Created")
