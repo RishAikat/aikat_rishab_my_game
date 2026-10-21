@@ -117,6 +117,7 @@ class Player(Sprite):
         if hits:
             self.coins += 1
             self.game.score += 1
+            self.game.pickup_snd.play()
             # print(f"I have {self.coins} coins")
         self.hit_rect.centerx = self.pos.x
         collide_with_walls(self, self.game.all_walls, 'x')
@@ -175,7 +176,7 @@ class Mob(Sprite):
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
 
-    #Rules for Character Movement
+    #Rules for Mob Movement
     def follow(self,obj):
         # Make the mob follow the player, which is the objective
         direction = vec(obj.rect.centerx - self.rect.centerx, obj.rect.centery - self.rect.centery)
@@ -183,7 +184,7 @@ class Mob(Sprite):
             direction = direction.normalize()
         self.vel = direction
     
-    def update(self):
+    def update(self):   
         self.animate()
         self.follow(self.game.player)
         self.pos += self.vel * self.speed * self.game.dt

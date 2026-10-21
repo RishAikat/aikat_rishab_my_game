@@ -41,20 +41,22 @@ class Game:
     #Loading files
     def load_data(self, map):
         self.game_dir = path.dirname(__file__)
-        self.game_save_dir = path.join(self.game_dir,"highscore.txt")
+        self.game_save_file = path.join(self.game_dir,"highscore.txt")
         self.img_dir = path.join(self.game_dir, 'images')
         self.snd_dir = path.join(self.game_dir, 'sound')
+        self.snd_dir = path.join(self.game_dir, 'sounds')
+        self.pickup_snd = pg.mixer.Sound(path.join(self.snd_dir, "coin_pickup.mp3"))
         self.map = Map(path.join(self.game_dir, map))
         # Creates file if does not exist
         try:
-            with open(self.game_save_dir, "x", encoding="utf-8") as file:
+            with open(self.game_save_file, 'x', encoding="utf-8") as file:
                 file.write("Hello World!")
             print("File created successfully.")
         except FileExistsError:
             print("File already exists. No action taken.")
 
         # Open file to try set highscore with except set to 0
-        with open(self.game_save_dir, 'r') as f:
+        with open(self.game_save_file, 'r') as f:
             try:
                 self.highscore = int(f.read())
                 print("Highscore Set")
@@ -81,7 +83,8 @@ class Game:
                     self.player = Player(self, col, row)
                 if tile == 'C':
                     Coin(self, col, row)
-
+        pg.mixer.music.load(path.join(self.snd_dir, "background_msc.ogg"))
+        pg.mixer.music.play(loops=-1)
     def run(self):
         while self.running:
             self.dt = self.clock.tick(FPS)/1000
@@ -92,7 +95,7 @@ class Game:
     def events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                with open(path.join(self.game_dir, self.game_save_dir), 'w') as f:
+                with open(path.join(self.game_dir, self.game_save_file), 'w') as f:
                     f.write(str(self.score))
                 if self.playing:
                     self.playing = False
