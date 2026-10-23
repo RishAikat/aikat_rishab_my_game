@@ -43,7 +43,7 @@ class Player(Sprite):
         self.spritesheet = Spritesheet(path.join(self.game.img_dir, "sprite_sheet.png"))
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image = self.spritesheet.get_image(0,0,TILESIZE,TILESIZE)
-        self.image.set_colorkey(BLUE)
+        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()   
         self.vel = vec(0,0)
         self.pos = vec(x,y) * TILESIZE
@@ -139,8 +139,8 @@ class Mob(Sprite):
         #self.image.fill(WHITE)
         self.rect = self.image.get_rect()
         self.rect.x = x
-        self.rect.y = y
-        self.speed = 100
+        self.rect.y = y 
+        self.speed = 250
         self.vel = vec(0,0)
         self.pos = vec(x,y) * TILESIZE
         self.hit_rect = MOB_HIT_RECT

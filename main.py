@@ -58,6 +58,7 @@ class Game:
         # Open file to try set highscore with except set to 0
         with open(self.game_save_file, 'r') as f:
             try:
+                #if self.game.score > self.highscore:
                 self.highscore = int(f.read())
                 print("Highscore Set")
             except:
@@ -95,8 +96,9 @@ class Game:
     def events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                with open(path.join(self.game_dir, self.game_save_file), 'w') as f:
-                    f.write(str(self.score))
+                if self.score > self.highscore:
+                    with open(path.join(self.game_dir, self.game_save_file), 'w') as f:
+                        f.write(str(self.score))
                 if self.playing:
                     self.playing = False
                 self.running = False
@@ -119,6 +121,7 @@ class Game:
         self.all_sprites.draw(self.screen)
         self.draw_text("Frames per second: " + str(floor(1/self.dt)), 24, WHITE, WIDTH/2, HEIGHT/4)
         self.draw_text(f"Coins:{self.player.coins} ", 24, YELLOW, WIDTH/2, HEIGHT/9)
+        self.draw_text(f"High Score:{self.highscore} ", 24, YELLOW, WIDTH/2, HEIGHT/13)
         pg.display.flip()
 
 #Starts Game
