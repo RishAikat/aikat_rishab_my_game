@@ -10,10 +10,10 @@ Output - Draw new frames pixels, sound, haptic (senses)
 (Store)
 change test
 
-GOALS: Collect dragon eggs
-RULES: Complete goals in timer
-FEEDBACK: Sounds, Images, Changes in screen
-FREEDOM: Can move as desired within map, can choose strategy
+GOALS: Collect all Coins
+RULES: Don't get hit by enemies
+FEEDBACK: Sounds, Changes in screen
+FREEDOM: Can move as desired within map
 '''
 
 #Importing required modules
@@ -72,12 +72,21 @@ class Game:
         self.all_walls = pg.sprite.Group()
         self.all_mobs = pg.sprite.Group()
         self.all_coins = pg.sprite.Group()
+        self.all_particles = pg.sprite.Group()
+        self.all_tiles = pg.sprite.Group()
         # Instantiate Player Here 
         # Instantiates  all sprite classes
         for row, tiles in enumerate(self.map.data):
             for col, tile in enumerate(tiles):
                 if tile == '1':
                     Wall(self, col, row)
+                if tile == 'I':
+                    f = FloorTile(self, col, row, CYAN)
+                    f.variant = 'ice'
+                
+                
+        for row, tiles in enumerate(self.map.data):
+            for col, tile in enumerate(tiles):
                 if tile == 'M':
                     Mob(self, col, row)
                 if tile == 'P':
@@ -93,6 +102,7 @@ class Game:
             self.update() # Updates Game
             self.draw() # Draws Sprites
 
+    # Checks to see if quit
     def events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -107,6 +117,7 @@ class Game:
     def update(self):
         self.all_sprites.update()
 
+    # Prints text on the screen
     def draw_text(self, text, size, color, x, y):
         font_name = pg.font.match_font('arial')
         font = pg.font.Font(font_name, size)
@@ -121,7 +132,7 @@ class Game:
         self.all_sprites.draw(self.screen)
         self.draw_text("Frames per second: " + str(floor(1/self.dt)), 24, WHITE, WIDTH/2, HEIGHT/4)
         self.draw_text(f"Coins:{self.player.coins} ", 24, YELLOW, WIDTH/2, HEIGHT/9)
-        self.draw_text(f"High Score:{self.highscore} ", 24, YELLOW, WIDTH/2, HEIGHT/13)
+        self.draw_text(f"High Score:{self.highscore} ", 24, GOLD, WIDTH/2, HEIGHT/13)
         pg.display.flip()
 
 #Starts Game
