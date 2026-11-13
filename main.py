@@ -10,8 +10,8 @@ Output - Draw new frames pixels, sound, haptic (senses)
 (Store)
 change test
 
-GOALS: Collect all Coins
-RULES: Don't get hit by enemies
+GOALS: Collect all Coins, Avoid Enemies
+RULES: Don't get hit by enemies, Complete Level in Timer
 FEEDBACK: Sounds, Changes in screen
 FREEDOM: Can move as desired within map
 '''
@@ -43,7 +43,7 @@ class Game:
         self.game_dir = path.dirname(__file__)
         self.game_save_file = path.join(self.game_dir,"highscore.txt")
         self.img_dir = path.join(self.game_dir, 'images')
-        self.snd_dir = path.join(self.game_dir, 'sound')
+        #self.snd_dir = path.join(self.game_dir, 'sound')
         self.snd_dir = path.join(self.game_dir, 'sounds')
         self.pickup_snd = pg.mixer.Sound(path.join(self.snd_dir, "coin_pickup.mp3"))
         self.map = Map(path.join(self.game_dir, map))

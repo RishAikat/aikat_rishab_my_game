@@ -1,3 +1,4 @@
+# Importing modules
 import pygame as pg
 from settings import *
 from math import floor

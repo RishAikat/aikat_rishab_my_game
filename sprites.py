@@ -1,3 +1,4 @@
+# Importing modules
 import pygame as pg
 from pygame.sprite import Sprite
 from settings import *
@@ -52,6 +53,7 @@ class Player(Sprite):
         self.vel = vec(0,0)
         self.acc = vec(0,0)
         self.pos = vec(x,y) * TILESIZE
+        self.cofric = PLAYER_FRIC
         self.hit_rect = PLAYER_HIT_RECT
         # Start with current frames and last update at zero so we can cycle through animations
         self.current_frame = 0
@@ -59,35 +61,33 @@ class Player(Sprite):
         # Accounting for the states of the player.
         self.jumping = False
         self.moving = False
-        self.cofric = -0.1
         self.coins = 0
         print("player instance created")
         self.load_images()
 
     # Gets player input
     def get_keys(self):
-        #self.vel = vec(0,0)
         keys = pg.key.get_pressed()
         if keys[pg.K_a]:
-            #self.vel.x = -PLAYER_SPEED
-            self.acc.x = -5
+            self.acc.x = -PLAYER_ACC
         if keys[pg.K_d]:
-            #self.vel.x = PLAYER_SPEED
-            self.acc.x = 5
+            self.acc.x = PLAYER_ACC
         if keys[pg.K_w]:
-            #self.vel.y = -PLAYER_SPEED
-            self.acc.y = -5
+            self.acc.y = -PLAYER_ACC
         if keys[pg.K_s]:
-            #self.vel.y = PLAYER_SPEED
-            self.acc.y = 5
-        if self.vel.x != 0 and self.vel.y != 0:
-            self.vel *= 0.7071
+            self.acc.y = PLAYER_ACC
+        # Unsure if required
+        # if self.vel.x != 0 and self.vel.y != 0:
+        #     self.vel *= 0.707106
 
     def jump(self):
         pass
     # Picks Up Player Skins
     def load_images(self):
-        self.idle_frames = [self.spritesheet.get_image(0,0, TILESIZE, TILESIZE), self.spritesheet.get_image(32,0, TILESIZE, TILESIZE), self.spritesheet.get_image(0,32, TILESIZE, TILESIZE), self.spritesheet.get_image(32,32, TILESIZE, TILESIZE)]
+        self.idle_frames = [self.spritesheet.get_image(0,0, TILESIZE, TILESIZE), 
+                            self.spritesheet.get_image(32,0, TILESIZE, TILESIZE), 
+                            self.spritesheet.get_image(0,32, TILESIZE, TILESIZE), 
+                            self.spritesheet.get_image(32,32, TILESIZE, TILESIZE)]
     # Cycles through Character Animations
     def animate(self):
         now = pg.time.get_ticks()
@@ -115,35 +115,40 @@ class Player(Sprite):
 
     #Rules for Character Movement
     def update(self):
-        #self.check_coins()
-        #self.animate()
+        self.animate()
+        self.acc = vec(0,0)
         self.get_keys()
-
-        # Movemnat in Ice
+        # self.acc += self.vel * self.cofric
+        self.acc.x += self.vel.x * self.cofric
+        self.acc.y += self.vel.y * self.cofric
+        self.vel += self.acc
+        # Limits Max Fall Speed
+        # Prompted AI to prevent funneling through tiles
+        if abs(self.vel.x) < 0.1:
+            self.vel.x = 0
+        if abs(self.vel.y) < 0.1:
+            self.vel.y = 0
+        # Updates position off of Vel and Acc
+        # Used exponential calculation with game.dt to update position
+        # Movement in Ice
+        # self.pos += self.vel * self.game.dt + 0.5 * self.acc * (self.game.dt ** 2)
+        # self.pos += self.vel * self.game.dt + 0.5 * self.acc
+        self.pos += self.vel + 0.5 * self.acc
         tile_hits = pg.sprite.spritecollide(self, self.game.all_tiles, False)
         if tile_hits:
             if tile_hits[0].variant == "ice":
-                self.cofric = -.001
-            else:
-                self.cofric = -.01
-                self.acc = vec(0,0)
-
-        
-        self.acc.x += self.vel.x * self.cofric
-        self.acc.y += self.vel.y * self.cofric
-        self.vel = self.acc
-        self.rect.center = self.pos
-        self.pos += self.vel * self.game.dt + 0.5 * self.acc
-
+                self.cofric = 0
+        else:
+                self.cofric = -.1
         # Coin Collection
         hits = pg.sprite.spritecollide(self, self.game.all_coins, True)
-        if hits:
+        for h in hits:
             self.coins += 1
             self.game.score += 1
             self.game.pickup_snd.play()
-            for i in range(200):
-                Particle(self.game, self.rect.x, self.rect.y)
-            # print(f"I have {self.coins} coins")
+            for i in range(20):
+                Particle(self.game, hits[0].rect.x, hits[0].rect.y)
+                hits[0].kill()
         self.hit_rect.centerx = self.pos.x
         collide_with_walls(self, self.game.all_walls, 'x')
         self.hit_rect.centery = self.pos.y
@@ -180,7 +185,10 @@ class Mob(Sprite):
 
     # Picks Up Mob Skins
     def load_images(self):
-            self.idle_frames = [self.spritesheet.get_image(64,32, TILESIZE, TILESIZE), self.spritesheet.get_image(96,0, TILESIZE, TILESIZE), self.spritesheet.get_image(64,32, TILESIZE, TILESIZE), self.spritesheet.get_image(96,32, TILESIZE, TILESIZE)]
+            self.idle_frames = [self.spritesheet.get_image(64,32, TILESIZE, TILESIZE), 
+                                self.spritesheet.get_image(96,0, TILESIZE, TILESIZE), 
+                                self.spritesheet.get_image(64,32, TILESIZE, TILESIZE), 
+                                self.spritesheet.get_image(96,32, TILESIZE, TILESIZE)]
     # Cycles through Mob Animations
     def animate(self):
         now = pg.time.get_ticks()
@@ -234,7 +242,7 @@ class Wall(Sprite):
         self.rect.center = self.pos
         print("Wall Instance Created")
 
-# Copied Wall Class to Make Particle Class with Sprite as Super Class
+# Copied Wall Class to Make FloorTile Class with Sprite as Super Class
 class FloorTile(Sprite):
     def __init__(self, game, x, y, color):
         self.groups = game.all_sprites, game.all_tiles
@@ -260,9 +268,10 @@ class Particle(Sprite):
         self.rect = self.image.get_rect()
         self.vel = vec(randint(-180,180),randint(-180,180))
         self.pos = vec(x,y)
+        self.speed = 0.25
         self.rect.center = self.pos
-        self.speed = 5
         self.countdown = Cooldown()
+        self.countdown.event_time = floor(pg.time.get_ticks()/1000)
         print("Particle Instance Created")
         print(self.rect.x)
         print(self.rect.y)
@@ -270,10 +279,11 @@ class Particle(Sprite):
     # Randomizes Directions and Removes after Duration
     def update(self):
         self.countdown.ticking()
-        self.rect.x += self.speed * randint(-5, 5)
-        self.rect.y += self.speed * randint(-5, 5)
+        self.pos += self.vel * self.speed * self.game.dt
         if self.countdown.delta > 1:
             self.kill()
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
 
 # Copied Wall Class to Make Coin Class with Sprite as Super Class
 class Coin(Sprite):
