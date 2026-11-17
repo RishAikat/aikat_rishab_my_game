@@ -4,6 +4,7 @@ from pygame.sprite import Sprite
 from settings import *
 from utils import *
 from os import path
+from math import *
 from random import randint
 
 vec = pg.math.Vector2
@@ -76,9 +77,13 @@ class Player(Sprite):
             self.acc.y = -PLAYER_ACC
         if keys[pg.K_s]:
             self.acc.y = PLAYER_ACC
+        if keys[pg.K_f]:
+            self.pew()
         # Unsure if required
         # if self.vel.x != 0 and self.vel.y != 0:
         #     self.vel *= 0.707106
+    def pew(self):
+        PewPew(self.game, self.hit_rect.centerx, self.rect.centery, TILESIZE/8, TILESIZE/8, 0, -10)
 
     def jump(self):
         pass
@@ -154,6 +159,29 @@ class Player(Sprite):
         self.hit_rect.centery = self.pos.y
         collide_with_walls(self, self.game.all_walls, 'y')
         self.rect.center = self.hit_rect.center
+
+class PewPew(Sprite):
+    def __init__(self, game, x, y, w, h, sx, sy):
+        self.groups = game.all_sprites, game.all_pews
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((w,h))
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.radius = TILESIZE / 8
+        pg.draw.circle(self.image, YELLOW, self.rect.center, self.radius)
+        self.rect.x = x
+        self.rect.y = y
+        self.speed_x = sx
+        self.speed_y = sy
+        self.fired = False
+
+    def update(self):
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
+
+        if self.rect.y < 0 or self.rect.y > HEIGHT:
+            self.kill
 
 # Copied over and modifed code for class Player
 class Mob(Sprite):

@@ -74,6 +74,7 @@ class Game:
         self.all_coins = pg.sprite.Group()
         self.all_particles = pg.sprite.Group()
         self.all_tiles = pg.sprite.Group()
+        self.all_pews = pg.sprite.Group()
         # Instantiate Player Here 
         # Instantiates  all sprite classes
         for row, tiles in enumerate(self.map.data):
